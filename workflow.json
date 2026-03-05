@@ -1,0 +1,163 @@
+{
+  "name": "AI Content Repurposer",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI Content Repurposer",
+        "formDescription": "Enter your topic and get a LinkedIn post, 3 tweets, and an Instagram caption — instantly.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Your Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Topic or Idea",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Tone",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Professional"
+                  },
+                  {
+                    "option": "Casual"
+                  },
+                  {
+                    "option": "Inspirational"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -320,
+        -64
+      ],
+      "id": "896f20ba-e979-4f6e-b7f5-aeec45069f75",
+      "name": "On form submission",
+      "webhookId": "08941b26-61ee-4f25-a805-abb008b7a502"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a social media content expert.\n\nThe user gave you this topic: {{ $json[\"Topic or Idea\"] }}\nTone: {{ $json[\"Tone\"] }}\n\nGenerate the following and return STRICT JSON ONLY. No markdown, no extra text:\n\n{\n  \"linkedin\": \"A LinkedIn post (150-200 words, engaging, ends with a question)\",\n  \"tweet1\": \"Tweet 1 (max 280 chars)\",\n  \"tweet2\": \"Tweet 2 (max 280 chars)\", \n  \"tweet3\": \"Tweet 3 (max 280 chars)\",\n  \"instagram\": \"Instagram caption (casual, with 5 relevant hashtags)\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -112,
+        -64
+      ],
+      "id": "ccaf18a7-5196-465f-8a53-e2cbbe7b72ad",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        144
+      ],
+      "id": "3ca39f64-03f2-430d-8e87-4628dc88756f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iXaIt6HIOgSsNFvW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Your Email'] }}",
+        "subject": "Your AI-Generated Content is Ready 🚀",
+        "message": "=<h2>Hey {{ $('On form submission').item.json['Your Name'] }}, here's your content!</h2>\n<p><b>Topic:</b> {{ $('On form submission').item.json['Topic or Idea'] }}</p>\n<p><b>Tone:</b> {{ $('On form submission').item.json['Tone'] }}</p>\n\n<hr>\n<h3>💼 LinkedIn Post</h3>\n<p>{{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).linkedin }}</p>\n\n<hr>\n<h3>🐦 Tweets</h3>\n<p>1️⃣ {{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).tweet1 }}</p>\n<p>2️⃣ {{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).tweet2 }}</p>\n<p>3️⃣ {{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).tweet3 }}</p>\n\n<hr>\n<h3>📸 Instagram Caption</h3>\n<p>{{ JSON.parse($json.text.replace(/```json|```/g, '').trim()).instagram }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -64
+      ],
+      "id": "5603561b-c95f-44b3-81db-4dfc18ab3ffe",
+      "name": "Send a message",
+      "webhookId": "db7bd2ef-27e9-4f53-94b2-d6412f358036",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wTRGYvXbAyeyJMDg",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0a35c27c-3b53-4002-ae3f-e1a8e8832ee8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "41e039cedb3a36a88c7cb06e1c01ecdba11906eba63c30992aded5ab7e47dc72"
+  },
+  "id": "oWB6ZWv7hWps_jnmXD2_y",
+  "tags": []
+}
